@@ -1,7 +1,8 @@
 // Map each class of actor to a character
 var actorChars = {
   "@": Player,
-  "o": Coin, // A coin will wobble up and down
+  "o": Coin, 
+  "q": Alien, // A coin will wobble up and down
   "=": Lava, "|": Lava, "v": Lava  
 };
 
