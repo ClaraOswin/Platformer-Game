@@ -89,6 +89,14 @@ function Coin(pos) {
 }
 Coin.prototype.type = "coin";
 
+function Alien(pos){
+  this.basePos = this.pos = pos.plus(new Vector(0.2,0.1));
+  this.size = new Vector(0.6, 0.6);
+  this.wobble = Math.random() * Math.PI * 2;
+}
+Alien.prototype.type = "alien";
+
+
 // Lava is initialized based on the character, but otherwise has a
 // size and position
 function Lava(pos, ch) {
@@ -222,6 +230,8 @@ Level.prototype.obstacleAt = function(pos, size) {
   // Consider the sides and top and bottom of the level as walls
   if (xStart < 0 || xEnd > this.width || yStart < 0)
     return "wall";
+  if(xStart < 0 || xEnd > this.width || yStart < 0 || yEnd > this.height)
+    return "outerspace";
   if (yEnd > this.height)
     return "lava";
 
@@ -304,9 +314,20 @@ Coin.prototype.act = function(step) {
   this.pos = this.basePos.plus(new Vector(0, wobblePos));
 };
 
+var maxStep = 0.05
+var wobbleSpeed = 8, wobbleDist = 0.07;
+
+Alien.prototype.act = function(step) {
+  this.wobble += step * wobbleSpeed;
+  var wobblePos = Math.sin(this.wobble) * wobbleDist;
+  this.Pos = this.basePos.plus(new Vector(0, wobblePos));
+};
+
+
 var maxStep = 0.05;
 
 var playerXSpeed = 7;
+
 
 Player.prototype.moveX = function(step, level, keys) {
   this.speed.x = 0;
@@ -335,6 +356,12 @@ Player.prototype.moveY = function(step, level, keys) {
   var motion = new Vector(0, this.speed.y * step);
   var newPos = this.pos.plus(motion);
   var obstacle = level.obstacleAt(newPos, this.size);
+  var fall = new Vector(10,10);
+  if (obstacle === "lava")
+    this.pos = fall;
+
+  if (obstacle === "outerspace")
+   this.pos = fall;
   // The floor is also an obstacle -- only allow players to 
   // jump if they are touching some obstacle.
   if (obstacle) {
@@ -374,6 +401,12 @@ Level.prototype.playerTouched = function(type, actor) {
     this.actors = this.actors.filter(function(other) {
       return other != actor;
     });
+    if (type == "alien") {
+    this.actors = this.actors.filter(function(other){
+      //return other != actor;
+      this.pos = new Vector(10,10);
+    });
+    }
     // If there aren't any coins left, player wins
     if (!this.actors.some(function(actor) {
            return actor.type == "coin";
