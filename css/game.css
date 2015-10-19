@@ -7,6 +7,7 @@
 
 .actor  { position: absolute;  }
 .coin   { background: rgb(241, 229, 89); }
+.alien  {background: rgb(124, 252, 0); }
 .player { background: rgb(64, 64, 64); }
 
 .game {
