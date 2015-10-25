@@ -4,6 +4,7 @@ var actorChars = {
   "o": Coin, 
   "q": Alien, // A coin will wobble up and down
   "=": Lava, "|": Lava, "v": Lava  
+  //"s": Spaceship
 };
 
 function Level(plan) {
@@ -36,9 +37,13 @@ function Level(plan) {
         this.actors.push(new Actor(new Vector(x, y), ch));
       else if (ch == "x")
         fieldType = "wall";
+      else if (ch == "s")
+        fieldType = "spaceship";
       // Because there is a third case (space ' '), use an "else if" instead of "else"
       else if (ch == "!")
         fieldType = "lava";
+      else if (ch == "q")
+        fieldType = "alien";
 
       // "Push" the fieldType, which is a string, onto the gridLine array (at the end).
       gridLine.push(fieldType);
@@ -76,7 +81,7 @@ Vector.prototype.times = function(factor) {
 // A Player has a size, speed and position.
 function Player(pos) {
   this.pos = pos.plus(new Vector(0, -0.5));
-  this.size = new Vector(0.8, 1.5);
+  this.size = new Vector(1.6, 1.5);
   this.speed = new Vector(0, 0);
 }
 Player.prototype.type = "player";
@@ -232,7 +237,7 @@ Level.prototype.obstacleAt = function(pos, size) {
   if (xStart < 0 || xEnd > this.width || yStart < 0)
     return "wall";
   if(xStart < 0 || xEnd > this.width || yStart < 0 || yEnd > this.height)
-    return "outerspace";
+    return "lava";
   if (yEnd > this.height)
     return "lava";
 
@@ -305,15 +310,15 @@ Coin.prototype.act = function(step) {
   this.pos = this.basePos.plus(new Vector(0, wobblePos));
 };
 
-var maxStep = 0.05;
+//var maxStep = 0.05;
 
-var wobbleSpeed = 8, wobbleDist = 0.07;
+//var wobbleSpeed = 8, wobbleDist = 0.07;
 
-Coin.prototype.act = function(step) {
+/*Coin.prototype.act = function(step) {
   this.wobble += step * wobbleSpeed;
   var wobblePos = Math.sin(this.wobble) * wobbleDist;
   this.pos = this.basePos.plus(new Vector(0, wobblePos));
-};
+};*/
 
 var maxStep = 0.05
 var wobbleSpeed = 8, wobbleDist = 0.07;
@@ -348,8 +353,8 @@ Player.prototype.moveX = function(step, level, keys) {
     this.pos = newPos;
 };
 
-var gravity = 30;
-var jumpSpeed = 17;
+var gravity = 25;
+var jumpSpeed = 20;
 
 Player.prototype.moveY = function(step, level, keys) {
   // Accelerate player downward (always)
@@ -360,9 +365,11 @@ Player.prototype.moveY = function(step, level, keys) {
   var fall = new Vector(10,10);
   if (obstacle === "lava")
     this.pos = fall;
+  if (obstacle === "alien")
+    this.pos= fall;
 
-  if (obstacle === "outerspace")
-   this.pos = fall;
+  /*if (obstacle === "outerspace")
+   this.pos = fall;*/
   // The floor is also an obstacle -- only allow players to 
   // jump if they are touching some obstacle.
   if (obstacle) {
@@ -402,21 +409,23 @@ Level.prototype.playerTouched = function(type, actor) {
     this.actors = this.actors.filter(function(other) {
       return other != actor;
     });
-    if (type == "alien") {
-    this.actors = this.actors.filter(function(other){
+  }
+    if (type == "alien" && this.status == null) {
+      this.status = "lost";
+      this.finishDelay = 1;
+    /*this.actors = this.actors.filter(function(other){
       //return other != actor;
-      this.pos = new Vector(10,10);
-    });
-    }
+      this.pos = new Vector(10,10);*/
+    };
+    
     // If there aren't any coins left, player wins
     if (!this.actors.some(function(actor) {
            return actor.type == "coin";
          })) {
       this.status = "won";
-      this.finishDelay = 1;
+      this.finishDelay = .05;
     }
-  }
-};
+  };
 
 // Arrow key codes for readibility
 var arrowCodes = {37: "left", 38: "up", 39: "right"};
@@ -495,6 +504,7 @@ function runGame(plans, Display) {
       else if (n < plans.length - 1)
         startLevel(n + 1);
       else
+        document.write("<IMG SRC = 'http://nairabrains.com/wp-content/uploads/2011/11/You-Win.jpg'>");
         console.log("You win!");
     });
   }
